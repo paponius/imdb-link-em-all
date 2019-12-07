@@ -1234,10 +1234,10 @@ function onLoad() {
   }
   // restore configuration
   GM.getValue('config').then(function(configstring) {
-    if (typeof configstring !== 'undefined') {
+    if (configstring !== undefined) {
       config = JSON.parse(configstring);
       // for scripts that were updated
-      if (typeof(config.fetch_results) === 'undefined') {
+      if (config.fetch_results === undefined) {
         config.fetch_results = DEFAULT_CONFIG.fetch_results;
       }
       parse_info();
