@@ -51,19 +51,19 @@ const DEFAULT_CONFIG = {
  ******************************************************************************/
 
 // movie details
-let imdb_id, imdb_title, imdb_year;
+var imdb_id, imdb_title, imdb_year;
 
 // new or legacy layout
-let layout;
+var layout;
 
 // alphabetically sorted site keys
-let sorted_keys = [];
+var sorted_keys = [];
 
 // script runs for the first time?
-let first_run = false;
+var first_run = false;
 
 // script configuration
-let config;
+var config;
 
 // ADDING-SITES.md describes how this works
 const sites = [
@@ -846,7 +846,7 @@ function clickCog(evt) {
 
 function showConfigure() {
   // un/tick checkboxes
-  let i;
+  var i;
   for (i = 0; i < 3; i++) {
     const s = sites[i];
     for (let key in s) {
@@ -863,8 +863,7 @@ function showConfigure() {
 }
 
 function saveConfigure() {
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     const s = sites[i];
     for (let key in s) {
       if (Object.prototype.hasOwnProperty.call(s, key)) {
@@ -894,16 +893,14 @@ function cancelConfigure() {
 
 function toggleAll(cat_idx) {
   const checked = $('#lta_config_toggle_all_' + cat_idx).prop('checked');
-  let i;
-  for (i = 0; i < sorted_keys[cat_idx].length; i++) {
+  for (let i = 0; i < sorted_keys[cat_idx].length; i++) {
     $('#lta_config_' + sorted_keys[cat_idx][i]).prop('checked', checked);
   }
 }
 
 // monitor all category checkboxes and un/check the toggle all checkbox
 function checkToggleAll() {
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     let all = true;
     let j;
     for (j = 0; j < sorted_keys[i].length; j++) {
@@ -927,9 +924,8 @@ function postLink(e) {
       .replace('lta-outlink-post', '')
       .replace('lta-outlink', '').trim();
     let site;
-    let i;
     // find key in sites
-    for (i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
       const s = sites[i];
       if (typeof s[k] === 'object') {
         site = s[k];
@@ -1032,8 +1028,7 @@ function fetchResults(key, site) {
     opts.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     const data = site[2][1];
     const data_array = [];
-    let data_key;
-    for (data_key in data) {
+    for (let data_key in data) {
       data_array.push(data_key + '=' + encodeURIComponent(repl(data[data_key])));
     }
     opts.data = data_array.join('&');
@@ -1068,17 +1063,15 @@ function init() {
   }
   add_style('style');
   // configure dialog
-  let configure = '<span class="cogs_wrapper"><a href="#" title="Configure" id="lta_configure_links"><img src="' + COGS_ICON + '" alt="Configure" class="ext_links_config" width="16" height="16"></a>' +
+  var configure = '<span class="cogs_wrapper"><a href="#" title="Configure" id="lta_configure_links"><img src="' + COGS_ICON + '" alt="Configure" class="ext_links_config" width="16" height="16"></a>' +
       '<span id="lta_configure_tooltip" class="hidden"><form><table><tr>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_0" value="1" id="lta_config_toggle_all_0"> <label for="lta_config_toggle_all_0">' + CATEGORY_NAMES[0] + '</label></h4></td>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_1" value="1" id="lta_config_toggle_all_1"> <label for="lta_config_toggle_all_1">' + CATEGORY_NAMES[1] + '</label></h4></td>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_2" value="1" id="lta_config_toggle_all_2"> <label for="lta_config_toggle_all_2">' + CATEGORY_NAMES[2] + '</label></h4></td></tr><tr>';
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     configure += '<td id="lta_cat_' + i + '">';
     const s = sites[i];
-    let j;
-    for (j = 0; j < sorted_keys[i].length; j++) {
+    for (let j = 0; j < sorted_keys[i].length; j++) {
       const key = sorted_keys[i][j];
       const site = s[key];
       const title = site[0];
@@ -1102,7 +1095,7 @@ function init() {
     '<button id="lta_configure_links_done" class="btn primary small">OK</button> <button id="lta_configure_links_cancel" class="btn small">Cancel</button></div>' +
     '</td></tr></table></form></span></span>';
 
-  let html;
+  var html;
   if (layout === 'new') {
     html = '<div class="article"><h2>Search ' + configure + '</h2><div id="lta_external_site_links"></div></div>';
   }
@@ -1133,12 +1126,10 @@ function init() {
 function updateExternalLinks() {
   const links = [[], [], []];
   const result_fetcher = [];
-  let html = '';
-  let i;
-  for (i = 0; i < 3; i++) {
+  var html = '';
+  for (let i = 0; i < 3; i++) {
     const s = sites[i];
-    let j;
-    for (j = 0; j < sorted_keys[i].length; j++) {
+    for (let j = 0; j < sorted_keys[i].length; j++) {
       const key = sorted_keys[i][j];
       if (config.enabled_sites.indexOf(key) >= 0) {
         const site = s[key];
@@ -1184,7 +1175,7 @@ function updateExternalLinks() {
   }
   $('#lta_external_site_links').html(html);
   // result fetching
-  for (i = 0; i < result_fetcher.length; i++) {
+  for (let i = 0; i < result_fetcher.length; i++) {
     fetchResults(result_fetcher[i][0], result_fetcher[i][1]);
   }
 }
@@ -1192,7 +1183,7 @@ function updateExternalLinks() {
 // parse movie info before calling init()
 function parse_info() {
   // parse imdb number/layout
-  let m = /^\/title\/tt([0-9]{7})\/([a-z]*)/.exec(window.location.pathname);
+  var m = /^\/title\/tt([0-9]{7})\/([a-z]*)/.exec(window.location.pathname);
   if (m) {
     // detect layout
     let title_selector;
@@ -1225,9 +1216,8 @@ function parse_info() {
 }
 
 function onLoad() {
-  let i;
   // prepare sorted_keys array
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     sorted_keys.push(Object.keys(sites[i]).sort(function(a, b) {
       return sites[i][a][0].localeCompare(sites[i][b][0]);
     }));
