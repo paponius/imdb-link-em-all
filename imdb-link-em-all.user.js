@@ -1,3 +1,5 @@
+ /*jshint strict:false */
+
 // ==UserScript==
 // @name           IMDb: Link 'em all!
 // @namespace      https://greasyfork.org/en/users/8981-buzz
@@ -26,6 +28,8 @@
 // http://www.imdb.com/title/tt4380968/
 // http://www.imdb.com/title/tt3087990/
 
+"use strict";
+
 /*******************************************************************************
  * Constants
  ******************************************************************************/
@@ -39,31 +43,99 @@ const TIMEOUT_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYA
 const NOACCESS_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfUlEQVQ4y21Sz2sTQRh9u9nml02M2hoapaZNtaIg4q0eBMEeRPGg3jyJhyK00EvpsZBr/wqhAfHQs3fBglRa0EYTm5YYFEqKSRvTJDs7s77ZbdpYHfiYmW++7817b8bAiZHL5fqVUnNSygnGWQYYvxgrjuMszs7O/u6tN3o3S0tLN9m8nEqlRuLxOEzTBPdot9uoVqvY5iDQ4/n5+fV/ANjcz8O1TCYzZts2KpUKms2mvh2WZSGZTHp1+Xx+k7kbCwsLLb03uwBMvhwaGhoTQqBYLG41Go0010Edel0oFH5qYLIbo5Tpbp/VXTA5EY1GUSqVwKaHMzMz5R515Ww2e69cLufT6bRX+z+AQa2Zt+n19klzdU6z0zVkO/iXB+V3z92V0jh29iKe5kfXVxFwBVzpwHX8EELi1fotz9RkuIYHF1ZxdWrN8Bm4Lp4+uUs0E0Ygwvk+oIhthfUhDRKQTgPZySbzwmvZfP3+WIK+SRc6u29ghQZgGP0s7AMiCaYVcLAHuf8NdusHlHOAyMg0XLvTA0CKUPomG/WNj9R5Colrt1F5u8j+8xi+M4n61w0C1BBLnyFhCVfYvQDCk+GSamL8CszgAN1RkB2JT7sRDMNGIjOCdjPE2gOPVRfA+wcu3dWoWmvt8zpZfOCJA9VW6LRI1SWzwhfUi999uUp5PccM9EajUkLichqB6DkC2Bh9NoVRwYb9HZzOpBDc7/MZUO4JANtDVY72YIMAMSBMI60g8xqgjlatCtFsIDYcp93Kl90LoCWELr5A5FIARjDkP6HJl1CUZrcQazWosEOi0vdLG38EwCfZWp7zvfA+jjgM52jmD/M/lpT+WgNx/AHLKabZmE0zigAAAABJRU5ErkJggg==';
 const LOADING_ICON = 'data:image/gif;base64,R0lGODlhEAAQAPMPAOjo6LS0tHd3d6KiotbW1oCAgMXFxZGRkfDw8Ly8vJqamomJic3Nzaurq3h4ePj4+CH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQFCgAPACwAAAAAEAAQAAAEW/DJh2gbdWq6ABICQG0SAH4hImrekwhvmpUKjA5Y1nIgsZY7CoJx+JU0CQXOQBKqkkomSaUSEgIzIOulMKp8k8DCMEx4AAwKWM0hMMjm4wSBczHR2RLWrm3qmxEAIfkEBQoADwAsAAAAAA8AEAAABE/wyflCk4hOJRcujNY9i0MKhCgZJctt4GkJQpZJAwlMxK6+qgejYUkFhQOi8YgxiG48RU6DANwSipAhhMFAcQACoxoMOMWrpyGDfviCVlEEACH5BAUKAA8ALAAAAAAQAA8AAARO8Mn5TKJYNr0QOpnkDF83hEglMMrCTADBMWWSHAKQCDl3wgZeD9ZIwVZEGyDjaTIC0JC0MsU0EsaphYAgcJsoTQwADhlk5IdH+lIv1ZQIACH5BAUKAA8ALAAAAAAQABAAAARS8MkpDb0VoaH0INhzBFvXYMhUEBwhnFrVAKVhKAJiCEX6BCPaxBX6XQAvms7GCDUK0A8TgHnyDhTQUekDJCzFoYEbfnQJGl8YbVYXqe0yJYaJAAAh+QQFCgAIACwAAAAAEAAOAAAEPhDJiUKgWA4pBM/c1iEFqHmdQWJDQZCH5VXruWGzSt3sBFQ6VmdkuWRKHx+GIDhkgr7hDzE1DTNVCoEnyYIiACH5BAUKAA4ALAAAAAAQABAAAARX0MnpCKHYIYZ26F+GBFySjAuQaQ1gAkWCWYBnBce2KJKNTJ2BIEdxYRAKQ2dZ+80G0FPTSTHsYsWn4VgrMgRD4HRZEACEBWrmO5AwRJSFeaXWCLYr+CQCACH5BAUKAA8ALAAAAAAQABAAAART8Mn5AKBYEm105g/TGconJYj4KAxmISFhkZLSTHPWFIN7YY0WDgHLMBrICrGIOR4OAdNkwCBKPSsmcFe5HUwFQeIRtXwQ4d/v7BBcHMLz4KCVRAAAIfkEBQoADgAsAQABAA8ADwAABFHQSYAQIZXJPScmDcd9WEN0yEZRTFANSSWLTnAEYiomJ02DgYDGN2kMYEQHwkSbKQELAU4kkCYUi6VAwUlIowZpswotIA4+hgBTMEN7o83AFwEAIfkEBQoADwAsAAAAABAAEAAABFPwyfkQoljabcnNANd9mIgkAGgSjJQYWWk0cIwZqS2/+gQEwJaEsCDcchqFQFCbKBMah+AAmBoYDcVp0XAZXYcDg6nJLBBhtMPmCC0OEoXtA4xFAAAh+QQFCgAOACwAAAEAEAAPAAAET9DJ6ZC1NEvsiM6XpwFXCUiG+E1MQiDgSDVF3XwtQxxCr+AG18VQOFEMqw5sQ0NKFoIGYqHIDRC7AMrYGVQLjMrngPCWD7jF8+eQJtuJTwQAIfkEBQoADwAsAAABABAADwAABE7wyUkfqngiUAHHXiUISSdtHzEKn0a0UkB217Tc2fO+g1MUgczug2AoMAzM4FRJNJKSwyOoGPAaMYOEENMFGgBprnD8To8gdGOJCOaymQgAIfkEBQoADwAsAAABAA8ADwAABFHwSVKAvPjSlbscAuNJ3AMIQgcg5oIa4oWsmOEQ2Twnh6IkqhUg4FoAc0IdYaDCIIiFDiNB2IWegdV0J7K0CIlsw8uSIHpYxLbTkIR3o0kMEwEAOw==';
 const CATEGORY_NAMES = ['General', 'Trackers', 'Subtitles'];
+
+/**
+ * Default values for new users and for variables newly introduced to new version.
+ * cpPlacement: where will the Control Panel be injected. Positions are determined by CP_PLACEMENT below
+ * There is yet not an option to change the layout on Options PopUp page. it's a todo.
+ * You can only change it with SELECTED_CP_PLACEMENT_TEMP_VAR below
+ * @type {Object}
+ */
 const DEFAULT_CONFIG = {
   enabled_sites: ['google', 'yt'],
   show_category_captions: true,
   open_blank: true,
-  fetch_results: true
+  fetch_results: true,
+  cpPlacement: 1
 };
+
+/**
+ * Until CP position can be changed in Options, this variable is used.
+ * @type {Number}
+ */
+const SELECTED_CP_PLACEMENT_TEMP_VAR = 2;
+
+/**
+ * Add all possible selectors for each layout.
+ * They are all tried in turn, first working for detected layout (IMDb page version) is used.
+ * If none works, also selectors from other layouts are tested.
+ * Selectors accept first result, they don't need to resolve to only one element.
+ * 2019-12, all of layout:2 selectors presently work
+ * @type {Array}
+ */
+const TITLE_SELECTOR = [
+	{ layout: 2, selector:'div.title_wrapper h1' },
+	{ layout: 2, selector:'div.titleBar h1' },
+	{ layout: 2, selector:'div.title_bar_wrapper h1' },
+	{ layout: 2, selector:'div.title_block h1' },
+	{ layout: 1, selector:'h3[itemprop=name]' } // can we make this more specific?
+];
+
+/**
+ * Placement of the Control Panel. You can add new entries here.
+ * placement: id od a placement. Each placement could have multiple entries with different
+ *   selectors for the same or different layouts. An entry with first working selector for a placement is used.
+ * layout: IMDb page layout (version) for which is the selector
+ * hInject: a function which is used to inject the Control Panel. You can use any of functions below this declaration,
+ *   or create a new function. Arguments must be 1: injected element, 2: reference element
+ * Selector: must identify an element which is used by hInject as a reference element
+ * Selectors accept first result, they don't need to resolve to only one element.
+ * @type {Array}
+ */
+const CP_PLACEMENT = [
+	{ placement: 1, layout: 2, hInject: insertAfter, selector: '.title-overview' },
+	{ placement: 1, layout: 1, hInject: insertAfter, selector: '.titlereference-section-overview:first > *:last' },
+	{ placement: 2, layout: 2, hInject: insertBefore, selector: '#sidebar .mini-article' }
+];
+
+// handler functions for injecting CP
+function insertChild() {
+	return; // TODO
+}
+function insertAfter(newNode, referenceNode) {
+    return referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+}
+function insertBefore(newNode, referenceNode) {
+	return referenceNode.parentNode.insertBefore(newNode, referenceNode);
+}
+// another possible functions could be: insertAsForthChild, insertTwoElementsAfter, insertAfterParent...
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
+// legacy, will be substituted by imdbData
 // movie details
-let imdb_id, imdb_title, imdb_year;
-
+var imdb_id, imdb_title, imdb_year;
 // new or legacy layout
-let layout;
+var layout;
+
+var imdbData = {
+	id: -1,
+	title: '',
+	year: -1,
+	// layout:
+	// -1: undefined
+	// 1: legacy
+	// 2: new
+	layout: -1
+};
 
 // alphabetically sorted site keys
-let sorted_keys = [];
-
-// script runs for the first time?
-let first_run = false;
+var sorted_keys = [];
 
 // script configuration
-let config;
+var config;
 
 // ADDING-SITES.md describes how this works
 const sites = [
@@ -846,7 +918,7 @@ function clickCog(evt) {
 
 function showConfigure() {
   // un/tick checkboxes
-  let i;
+  var i;
   for (i = 0; i < 3; i++) {
     const s = sites[i];
     for (let key in s) {
@@ -863,8 +935,7 @@ function showConfigure() {
 }
 
 function saveConfigure() {
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     const s = sites[i];
     for (let key in s) {
       if (Object.prototype.hasOwnProperty.call(s, key)) {
@@ -894,16 +965,14 @@ function cancelConfigure() {
 
 function toggleAll(cat_idx) {
   const checked = $('#lta_config_toggle_all_' + cat_idx).prop('checked');
-  let i;
-  for (i = 0; i < sorted_keys[cat_idx].length; i++) {
+  for (let i = 0; i < sorted_keys[cat_idx].length; i++) {
     $('#lta_config_' + sorted_keys[cat_idx][i]).prop('checked', checked);
   }
 }
 
 // monitor all category checkboxes and un/check the toggle all checkbox
 function checkToggleAll() {
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     let all = true;
     let j;
     for (j = 0; j < sorted_keys[i].length; j++) {
@@ -927,9 +996,8 @@ function postLink(e) {
       .replace('lta-outlink-post', '')
       .replace('lta-outlink', '').trim();
     let site;
-    let i;
     // find key in sites
-    for (i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
       const s = sites[i];
       if (typeof s[k] === 'object') {
         site = s[k];
@@ -1032,8 +1100,7 @@ function fetchResults(key, site) {
     opts.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     const data = site[2][1];
     const data_array = [];
-    let data_key;
-    for (data_key in data) {
+    for (let data_key in data) {
       data_array.push(data_key + '=' + encodeURIComponent(repl(data[data_key])));
     }
     opts.data = data_array.join('&');
@@ -1058,27 +1125,48 @@ async function add_style(resourcename) {
   h.appendChild(s);
 }
 
-// initialize
-function init() {
-  // Add new link section
-  const $container = $(layout === 'new' ? '.title-overview' : '.titlereference-section-overview:first > *:last');
-  if ($container.length === 0) {
-    console.error("IMDb: Link'em all! Failed to find container!");
-    return;
-  }
+/**
+ * Will find working placement for the Control Panel
+ * @method getCPPlacement
+ * @return {Object}       contains selector and function which adds the Control Panel to DOM
+ */
+function getCPPlacement() {
+	// try all selectors with suitable cpPlacement and layout
+	return CP_PLACEMENT.find(function(cpPlac) {
+		if (cpPlac.placement !== config.cpPlacement) { return false; }
+		if (cpPlac.layout !== imdbData.layout) { return false; }
+		// since we already getting the element, let's keep it. Yes Lint, it's an assignment.
+		// The returned value from getCPPlacement() is cpPlac. It will not be obtained by next line,
+		// but is supplied by find() method. It does retain property elRef added here.
+		// I hope all browsers will do the same as this is not in spec.
+		return cpPlac.elRef = document.querySelector(cpPlac.selector);
+	});
+}
+
+/**
+ * inject Control Panel to IMDb web page
+ * @method injectCP
+ * @return {null} no return
+ */
+function injectCP() {
+	const cpPlac = getCPPlacement();
+	if (cpPlac === undefined) {
+		console.error("IMDb: Link'em all! Failed to find reference element for CP!");
+		return null;
+	}
+	debugger;
+
   add_style('style');
   // configure dialog
-  let configure = '<span class="cogs_wrapper"><a href="#" title="Configure" id="lta_configure_links"><img src="' + COGS_ICON + '" alt="Configure" class="ext_links_config" width="16" height="16"></a>' +
+  var configure = '<span class="cogs_wrapper"><a href="#" title="Configure" id="lta_configure_links"><img src="' + COGS_ICON + '" alt="Configure" class="ext_links_config" width="16" height="16"></a>' +
       '<span id="lta_configure_tooltip" class="hidden"><form><table><tr>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_0" value="1" id="lta_config_toggle_all_0"> <label for="lta_config_toggle_all_0">' + CATEGORY_NAMES[0] + '</label></h4></td>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_1" value="1" id="lta_config_toggle_all_1"> <label for="lta_config_toggle_all_1">' + CATEGORY_NAMES[1] + '</label></h4></td>' +
       '<td><h4 title="Toggle all"><input type="checkbox" name="toggle_all_2" value="1" id="lta_config_toggle_all_2"> <label for="lta_config_toggle_all_2">' + CATEGORY_NAMES[2] + '</label></h4></td></tr><tr>';
-  let i;
-  for (i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     configure += '<td id="lta_cat_' + i + '">';
     const s = sites[i];
-    let j;
-    for (j = 0; j < sorted_keys[i].length; j++) {
+    for (let j = 0; j < sorted_keys[i].length; j++) {
       const key = sorted_keys[i][j];
       const site = s[key];
       const title = site[0];
@@ -1102,14 +1190,20 @@ function init() {
     '<button id="lta_configure_links_done" class="btn primary small">OK</button> <button id="lta_configure_links_cancel" class="btn small">Cancel</button></div>' +
     '</td></tr></table></form></span></span>';
 
-  let html;
+  var html;
   if (layout === 'new') {
     html = '<div class="article"><h2>Search ' + configure + '</h2><div id="lta_external_site_links"></div></div>';
   }
   else {
     html = '<hr><h3>Search ' + configure + '</h3><div id="lta_external_site_links"></div><hr>';
   }
-  $container.after(html);
+
+  	var elCP = document.createElement('div');
+  	// CSS needs to know a placement for possible differences
+  	elCP.classList.add('.link-em-all-'+cpPlac.placement);
+  	elCP.innerHTML = html;
+  	// use a function from cpPlac to insert elCP element in reference to cpPlac.elRef
+	cpPlac.hInject(elCP, cpPlac.elRef);
 
   // Setup callbacks
   $('#lta_configure_tooltip form').submit(function(evt) { evt.preventDefault(); });
@@ -1133,12 +1227,10 @@ function init() {
 function updateExternalLinks() {
   const links = [[], [], []];
   const result_fetcher = [];
-  let html = '';
-  let i;
-  for (i = 0; i < 3; i++) {
+  var html = '';
+  for (let i = 0; i < 3; i++) {
     const s = sites[i];
-    let j;
-    for (j = 0; j < sorted_keys[i].length; j++) {
+    for (let j = 0; j < sorted_keys[i].length; j++) {
       const key = sorted_keys[i][j];
       if (config.enabled_sites.indexOf(key) >= 0) {
         const site = s[key];
@@ -1184,70 +1276,115 @@ function updateExternalLinks() {
   }
   $('#lta_external_site_links').html(html);
   // result fetching
-  for (i = 0; i < result_fetcher.length; i++) {
+  for (let i = 0; i < result_fetcher.length; i++) {
     fetchResults(result_fetcher[i][0], result_fetcher[i][1]);
   }
 }
 
-// parse movie info before calling init()
-function parse_info() {
-  // parse imdb number/layout
-  let m = /^\/title\/tt([0-9]{7})\/([a-z]*)/.exec(window.location.pathname);
-  if (m) {
-    // detect layout
-    let title_selector;
-    if (m[2] === 'reference' || m[2] === 'combined') {
-      layout = 'legacy';
-      title_selector = 'h3[itemprop=name]';
-    }
-    else {
-      layout = 'new';
-      title_selector = 'h1';
-    }
-    // extract movie infos
-    imdb_title = $(title_selector).text().trim();
-    imdb_id = m[1];
-    m = /^(.+)\s+\((\d+)\)/.exec(imdb_title);
-    if (m) {
-      imdb_title = m[1].trim();
-      imdb_year = m[2].trim();
-    }
-    else {
-      imdb_year = '';
-    }
-    // fire!
-    init();
-    updateExternalLinks();
-    if (first_run) {
-      showConfigure();
-    }
-  }
+function getMovieInfo() {
+	var id, title, year, layout;
+	// p: one function does one thing
+	// p: too many globals. expensive in JS, Closure Variables less
+
+	// p: variable with short name used on more then few successive lines
+	var match = /^\/title\/tt([0-9]{7})\/([a-z]*)/.exec(window.location.pathname);
+	id = match[1];
+	if (!id) { return null; }
+
+	// detect layout
+	var title_selector;
+	if (match[2] === 'reference' || match[2] === 'combined') {
+	  layout = 1;
+	  title_selector = 'h3[itemprop=name]';
+	} else {
+	  layout = 2;
+	  title_selector = 'h1';
+	}
+
+	// --- title and year
+	// p: do not reuse variables
+	// p: removed jQuery
+	// var titleFull = $(title_selector).text().trim();
+	var elTitle;
+	TITLE_SELECTOR.find(function(ts) {
+		if (ts.layout !== layout) { return false; }
+		elTitle = document.querySelector(ts.selector);
+		return !!elTitle;
+	}) ||
+	// if title is not found using expected layout, try all layouts
+	TITLE_SELECTOR.find(function(ts) {
+		elTitle = document.querySelector(ts.selector);
+		return !!elTitle;
+	}); // Lint doesn't like this. I know it's weird, but is it bad? Minifier does such stuff anyway.
+	if (!elTitle) { console.error("IMDb: Link'em all! Failed to find Title."); }
+	var titleFull = elTitle.textContent.trim();
+	// p: removed regex. expensive and this is easy to obtain
+	title = titleFull.substring(0, titleFull.lastIndexOf('(')).trim();
+	year = titleFull.substring(titleFull.lastIndexOf('(')+1, titleFull.lastIndexOf(')')).trim();
+
+	if (isNaN(year)) { year = -1; }
+	return {id, title, year, layout};
 }
 
-function onLoad() {
-  let i;
-  // prepare sorted_keys array
-  for (i = 0; i < 3; i++) {
-    sorted_keys.push(Object.keys(sites[i]).sort(function(a, b) {
-      return sites[i][a][0].localeCompare(sites[i][b][0]);
-    }));
-  }
-  // restore configuration
-  GM.getValue('config').then(function(configstring) {
-    if (typeof configstring !== 'undefined') {
-      config = JSON.parse(configstring);
-      // for scripts that were updated
-      if (typeof(config.fetch_results) === 'undefined') {
-        config.fetch_results = DEFAULT_CONFIG.fetch_results;
-      }
-      parse_info();
-    }
-    else {
-      config = DEFAULT_CONFIG;
-      first_run = true;
-      GM.setValue('config', JSON.stringify(config)).then(parse_info);
-    }
-  });
+function init() {
+	var first_run = false;
+
+	var configLoaded = GM.getValue('config');
+
+	// prepare sorted_keys array
+	for (let i = 0; i < 3; i++) {
+	sorted_keys.push(Object.keys(sites[i]).sort(function(a, b) {
+	  return sites[i][a][0].localeCompare(sites[i][b][0]);
+	}));
+	}
+
+
+	imdbData = getMovieInfo();
+
+	// legacy
+	imdb_id = imdbData.id;
+	imdb_title = imdbData.title;
+	imdb_year = imdbData.year;
+	if (imdb_year === -1) { imdb_year = ''; }
+	if (imdbData.layout === 1) { layout = 'legacy'; }
+	if (imdbData.layout === 2) { layout = 'new'; }
+
+
+	// once configuration will be loaded, we can continue
+	configLoaded.then(function(configstring) {
+		if (configstring !== undefined) {
+			config = JSON.parse(configstring);
+
+			// check if all config properties were loaded from GM,
+			// add any new property a new version of this script might have 
+			for (let key in DEFAULT_CONFIG) {
+				if (!DEFAULT_CONFIG.hasOwnProperty(key)) { continue; }
+				if (config[key] === undefined) { config[key] = DEFAULT_CONFIG[key]; }
+			}
+			// parse_info();
+		} else {
+			config = DEFAULT_CONFIG;
+			first_run = true;
+			// todo: do we need to wait for save?
+			// GM.setValue('config', JSON.stringify(config)).then(parse_info);
+			GM.setValue('config', JSON.stringify(config));
+		}
+
+		// TEMP: remove when implemented
+		if (SELECTED_CP_PLACEMENT_TEMP_VAR) { config.cpPlacement = SELECTED_CP_PLACEMENT_TEMP_VAR; }
+
+		injectCP(); // must be after config loaded
+		updateExternalLinks();
+		if (first_run) {
+		  showConfigure();
+		}
+
+	});
 }
 
-$(onLoad);
+// not using JS from the page, DOMContentLoaded is enough
+if (document.readyState !== 'interactive' && document.readyState !== 'complete') {
+	window.addEventListener('DOMContentLoaded', init);
+	// just curious if this ever happens
+	console.log("IMDb: Link'em all! DOM was not loaded before GM started this script.");
+} else { init(); }

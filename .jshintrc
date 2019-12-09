@@ -1,0 +1,14 @@
+// a config file for jshint lint, old description here: https://gist.github.com/connor/1597131
+{
+	// Allow ECMAScript 6 syntax. Will not report errors on v6 syntax
+	"esversion" : 6,
+
+	// Allow debugger statements e.g. browser breakpoints.
+	"debug" : true,
+
+	// use strict warning because it's not inside its own function (but GM script gets wrapped by GM into a function)
+	"strict": false,
+
+	// ignore variables which are defined upstream
+	"globals": { "$": true, "GM": true, "window": true, "document": true, "console": true }
+}
